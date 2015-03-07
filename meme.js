@@ -3,6 +3,10 @@ var Meme = ( function (window, undefined) {
   function Meme (options) {
   	this.options = options;
 
+  	this.top = this.options.top || '';
+  	this.bottom = this.options.bottom || '';
+  	this.options.crop = this.options.crop || 'original';
+
     this.canvas = this.get_canvas(this.options.canvas);
     this.context = this.canvas.getContext('2d');
     this.image = this.get_image(this.options.image);
@@ -119,16 +123,26 @@ var Meme = ( function (window, undefined) {
 
     setup_canvas : function (ready) {
       // Set dimensions
-      this.change_crop(this.options.crop);
+      this.set_crop(this.options.crop);
 
       this.draw_image();
 
       ready();
     },
 
-    change_crop : function (crop) {
+    set_crop : function (crop) {
     	this['crop_'+crop]();
     	this.setCanvasDimensions(this.width, this.height);
+    },
+
+    update_crop : function (crop) {
+    	this.set_crop(crop);
+    	this.draw();
+    },
+
+    crop_original : function () {
+    	this.width = this.image.width;
+    	this.height = this.image.height;
     },
 
     crop_square_letterbox: function () {
@@ -148,11 +162,20 @@ var Meme = ( function (window, undefined) {
       this.context.drawImage(this.image, (this.width-this.image.width)/2, (this.height-this.image.height)/2);
     },
 
+    update : function (options) {
+    	for (var option in options) {
+			  if( options.hasOwnProperty( option ) ) {
+			  	this[option] = options[option];
+			  }
+			}
+    	this.draw();
+    },
+
     draw : function (top, bottom) {
     	this.draw_image();
       // Draw them!
-      this.drawText(top, 'top', undefined, this.determineCaptionFontSize(top));
-      this.drawText(bottom, 'bottom', undefined, this.determineCaptionFontSize(bottom));
+      this.drawText(this.top, 'top', undefined, this.determineCaptionFontSize(this.top));
+      this.drawText(this.bottom, 'bottom', undefined, this.determineCaptionFontSize(this.bottom));
     },
 
     get_image : function (image) {
