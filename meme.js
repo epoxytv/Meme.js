@@ -1,222 +1,180 @@
-/*
-Meme.js
-=======
+var Meme = ( function (window, undefined) {
 
-Use one function to generate a meme.
+  function Meme (image, canvas, ready) {
+    this.canvas = this.get_canvas(canvas);
+    this.context = canvas.getContext('2d');
+    this.image = this.get_image(image);
 
-You can call it all with strings:
+    var that = this;
+    this.image.onload = this.setup_canvas.bind(this, ready);
+  }
 
-     Meme('dog.jpg', 'canvasID', 'Buy pizza, 'Pay in snakes');
+  Meme.prototype = {
 
-Or with a selected canvas element:
+    // Cribbed from memedad
+    captionLengthToFontSize: {
+      1: 70,
+      2: 68,
+      3: 66,
+      4: 64,
+      5: 62,
+      6: 61,
+      7: 60,
+      8: 55,
+      9: 50,
+      10: 45,
+    },
+    // Set the proper width and height of the canvas
+    setCanvasDimensions : function(w, h) {
+      this.canvas.width = w;
+      this.canvas.height = h;
+    },
 
-     var canvas = document.getElementById('canvasID');
-     Meme('wolf.jpg', canvas, 'The time is now', 'to take what\'s yours');
+    // Cribbed from memedad
+    determineCaptionFontSize : function (caption) {
+      var length = caption.length;
+      var size;
+      if (length > 10) {
+        size = Math.round(Math.max(((1 / (Math.pow(length, 0.14285714285714285714285714285714))) * 50 + 10), 14));
+      }
+      else if (length > 20) {
+        size = Math.round(Math.max(((1 / (Math.pow(length, 0.125))) * 40 + 13), 14));
+      }
+      else if (length > 90) {
+        size = Math.round(Math.max(((1 / (Math.pow((length - 80), 0.125))) * 40 + 5), 14));
+      }
+      else if (length > 206) {
+        size = Math.round(Math.max(((1 / (Math.pow((length - 160), 0.125))) * 40 + 2), 14));
+      }
+      else {
+        size = this.captionLengthToFontSize[length];
+      }
+      return size;
+    },
 
-Or with a jQuery/Zepto selection:
+    /*
+    Draw a centered meme string
+    */
 
-     Meme('spidey.jpg', $('#canvasID'), 'Did someone say', 'Spiderman JS?');
+    drawText : function(text, topOrBottom, y, fontSize) {
 
-You can also pass in an image:
+      // Variable setup
+      topOrBottom = topOrBottom || 'top';
+      var x = this.canvas.width / 2;
+      if (typeof y === 'undefined') {
+        y = fontSize * 1.5;
+        if (topOrBottom === 'bottom')
+          y = this.canvas.height - (fontSize/2);
+      }
 
-     var img = new Image();
-     img.src = 'insanity.jpg';
-     var can = document.getElementById('canvasID');
-     Meme(img, can, 'you ignore my calls', 'I ignore your screams of mercy');
+      this.context.font = fontSize + 'px Impact';
 
-********************************************************************************
+      // Should we split it into multiple lines?
+      if (this.context.measureText(text).width > (this.canvas.width * 1.0)) {
 
-Copyright (c) 2012 BuddyMeme
+        // Split word by word
+        var words = text.split(' ');
+        var wordsLength = words.length;
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
+        // Start with the entire string, removing one word at a time. If
+        // that removal lets us make a line, place the line and recurse with
+        // the rest. Removes words from the back if placing at the top;
+        // removes words at the front if placing at the bottom.
+        if (topOrBottom === 'top') {
+          var i = wordsLength;
+          while (i --) {
+            var justThis = words.slice(0, i).join(' ');
+            if (this.context.measureText(justThis).width < (this.canvas.width * 1.0)) {
+              drawText(justThis, topOrBottom, y, fontSize);
+              drawText(words.slice(i, wordsLength).join(' '), topOrBottom, y + fontSize, fontSize);
+              return;
+            }
+          }
+        }
+        else if (topOrBottom === 'bottom') {
+          for (var i = 0; i < wordsLength; i ++) {
+            var justThis = words.slice(i, wordsLength).join(' ');
+            if (this.context.measureText(justThis).width < (this.canvas.width * 1.0)) {
+              drawText(justThis, topOrBottom, y, fontSize);
+              drawText(words.slice(0, i).join(' '), topOrBottom, y - fontSize, fontSize);
+              return;
+            }
+          }
+        }
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+      }
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+      // Draw!
+      this.context.fillText(text, x, y, this.canvas.width * .9);
+      this.context.strokeText(text, x, y, this.canvas.width * .9);
 
-*/
+    },
 
-window.Meme = function(image, canvas, top, bottom) {
+    setup_canvas : function (ready) {
+      // Set dimensions
+      this.setCanvasDimensions(this.image.width, this.image.height);
 
-	/*
-	Default top and bottom
-	*/
+      this.draw_image();
 
-	top = top || '';
-	bottom = bottom || '';
+      // Set up text variables
+      this.context.fillStyle = 'white';
+      this.context.strokeStyle = 'black';
+      this.context.lineWidth = 2;
+      this.context.textAlign = 'center';
 
-	/*
-	Deal with the canvas
-	*/
+      ready();
+    },
 
-	// If it's nothing, set it to a dummy value to trigger error
-	if (!canvas)
-		canvas = 0;
+    draw_image : function () {
+    	// Draw the image
+      this.context.drawImage(this.image, 0, 0);
+    },
 
-	// If it's a string, conver it
-	if (canvas.toUpperCase)
-		canvas = document.getElementById(canvas);
+    draw : function (top, bottom) {
+    	this.draw_image();
+      // Draw them!
+      this.drawText(top, 'top', undefined, this.determineCaptionFontSize(top));
+      this.drawText(bottom, 'bottom', undefined, this.determineCaptionFontSize(bottom));
+    },
 
-	// If it's jQuery or Zepto, convert it
-	if (($) && (canvas instanceof $))
-		canvas = canvas[0];
+    get_image : function (image) {
+      if (!image)
+        image = 0;
 
-	// Throw error
-	if (!(canvas instanceof HTMLCanvasElement))
-		throw new Error('No canvas selected');
+      // Convert it from a string
+      if (image.toUpperCase) {
+        var src = image;
+        image = new Image();
+        image.src = src;
+      }
+      return image;
+    },
 
-	// Get context
-	var context = canvas.getContext('2d');
+    get_canvas : function (canvas) {
+      // If it's nothing, set it to a dummy value to trigger error
+      if (!canvas) {
+        canvas = 0;
+      }
 
-	/*
-	Deal with the image
-	*/
+      // If it's a string, conver it
+      if (canvas.toUpperCase) {
+        canvas = document.getElementById(canvas);
+      }
 
-	// If there's no image, set it to a dummy value to trigger an error
-	if (!image)
-		image = 0;
+      // If it's jQuery or Zepto, convert it
+      if (($) && (canvas instanceof $)) {
+        canvas = canvas[0];
+      }
 
-	// Convert it from a string
-	if (image.toUpperCase) {
-		var src = image;
-		image = new Image();
-		image.src = src;
-	}
+      // Throw error
+      if (!(canvas instanceof HTMLCanvasElement)) {
+        throw new Error('No canvas selected');
+      }
 
-	// Set the proper width and height of the canvas
-	var setCanvasDimensions = function(w, h) {
-		canvas.width = w;
-		canvas.height = h;
-	};
-	setCanvasDimensions(image.width, image.height);
-
-	// Cribbed from memedad
-  var captionLengthToFontSize = {
-    1: 70,
-    2: 68,
-    3: 66,
-    4: 64,
-    5: 62,
-    6: 61,
-    7: 60,
-    8: 55,
-    9: 50,
-    10: 45,
+      return canvas;
+    },
   };
 
-  // Cribbed from memedad
-  var determineCaptionFontSize = function (caption) {
-    var length = caption.length;
-    var size;
-    if (length > 10) {
-      size = Math.round(Math.max(((1 / (Math.pow(length, 0.14285714285714285714285714285714))) * 50 + 10), 14));
-    }
-    else if (length > 20) {
-      size = Math.round(Math.max(((1 / (Math.pow(length, 0.125))) * 40 + 13), 14));
-    }
-    else if (length > 90) {
-      size = Math.round(Math.max(((1 / (Math.pow((length - 80), 0.125))) * 40 + 5), 14));
-    }
-    else if (length > 206) {
-      size = Math.round(Math.max(((1 / (Math.pow((length - 160), 0.125))) * 40 + 2), 14));
-    }
-    else {
-      size = captionLengthToFontSize[length];
-    }
-    return size;
-  };
+  return Meme;
 
-	/*
-	Draw a centered meme string
-	*/
-
-	var drawText = function(text, topOrBottom, y, fontSize) {
-
-		// Variable setup
-		topOrBottom = topOrBottom || 'top';
-		var x = canvas.width / 2;
-		if (typeof y === 'undefined') {
-			y = fontSize * 1.5;
-			if (topOrBottom === 'bottom')
-				y = canvas.height - (fontSize/2);
-		}
-
-		context.font = fontSize + 'px Impact';
-
-		// Should we split it into multiple lines?
-		if (context.measureText(text).width > (canvas.width * 1.0)) {
-
-			// Split word by word
-			var words = text.split(' ');
-			var wordsLength = words.length;
-
-			// Start with the entire string, removing one word at a time. If
-			// that removal lets us make a line, place the line and recurse with
-			// the rest. Removes words from the back if placing at the top;
-			// removes words at the front if placing at the bottom.
-			if (topOrBottom === 'top') {
-				var i = wordsLength;
-				while (i --) {
-					var justThis = words.slice(0, i).join(' ');
-					if (context.measureText(justThis).width < (canvas.width * 1.0)) {
-						drawText(justThis, topOrBottom, y, fontSize);
-						drawText(words.slice(i, wordsLength).join(' '), topOrBottom, y + fontSize, fontSize);
-						return;
-					}
-				}
-			}
-			else if (topOrBottom === 'bottom') {
-				for (var i = 0; i < wordsLength; i ++) {
-					var justThis = words.slice(i, wordsLength).join(' ');
-					if (context.measureText(justThis).width < (canvas.width * 1.0)) {
-						drawText(justThis, topOrBottom, y, fontSize);
-						drawText(words.slice(0, i).join(' '), topOrBottom, y - fontSize, fontSize);
-						return;
-					}
-				}
-			}
-
-		}
-
-		// Draw!
-		context.fillText(text, x, y, canvas.width * .9);
-		context.strokeText(text, x, y, canvas.width * .9);
-
-	};
-
-	/*
-	Do everything else after image loads
-	*/
-
-	image.onload = function() {
-
-		// Set dimensions
-		setCanvasDimensions(this.width, this.height);
-
-		// Draw the image
-		context.drawImage(image, 0, 0);
-
-		// Set up text variables
-		context.fillStyle = 'white';
-		context.strokeStyle = 'black';
-		context.lineWidth = 2;
-		context.textAlign = 'center';
-
-		// Draw them!
-		drawText(top, 'top', undefined, determineCaptionFontSize(top));
-		drawText(bottom, 'bottom', undefined, determineCaptionFontSize(bottom));
-
-	};
-
-};
+})(window);
