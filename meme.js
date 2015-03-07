@@ -99,26 +99,63 @@ window.Meme = function(image, canvas, top, bottom) {
 		canvas.width = w;
 		canvas.height = h;
 	};
-	setCanvasDimensions(image.width, image.height);	
+	setCanvasDimensions(image.width, image.height);
+
+	// Cribbed from memedad
+  var captionLengthToFontSize = {
+    1: 70,
+    2: 68,
+    3: 66,
+    4: 64,
+    5: 62,
+    6: 61,
+    7: 60,
+    8: 55,
+    9: 50,
+    10: 45,
+  };
+
+  // Cribbed from memedad
+  var determineCaptionFontSize = function (caption) {
+    var length = caption.length;
+    var size;
+    if (length > 10) {
+      size = Math.round(Math.max(((1 / (Math.pow(length, 0.14285714285714285714285714285714))) * 50 + 10), 14));
+    }
+    else if (length > 20) {
+      size = Math.round(Math.max(((1 / (Math.pow(length, 0.125))) * 40 + 13), 14));
+    }
+    else if (length > 90) {
+      size = Math.round(Math.max(((1 / (Math.pow((length - 80), 0.125))) * 40 + 5), 14));
+    }
+    else if (length > 206) {
+      size = Math.round(Math.max(((1 / (Math.pow((length - 160), 0.125))) * 40 + 2), 14));
+    }
+    else {
+      size = captionLengthToFontSize[length];
+    }
+    return size;
+  };
 
 	/*
 	Draw a centered meme string
 	*/
 
-	var drawText = function(text, topOrBottom, y) {
+	var drawText = function(text, topOrBottom, y, fontSize) {
 
 		// Variable setup
 		topOrBottom = topOrBottom || 'top';
-		var fontSize = (canvas.height / 8);
 		var x = canvas.width / 2;
 		if (typeof y === 'undefined') {
-			y = fontSize;
+			y = fontSize * 1.5;
 			if (topOrBottom === 'bottom')
-				y = canvas.height - 10;
+				y = canvas.height - (fontSize/2);
 		}
 
+		context.font = fontSize + 'px Impact';
+
 		// Should we split it into multiple lines?
-		if (context.measureText(text).width > (canvas.width * 1.1)) {
+		if (context.measureText(text).width > (canvas.width * 1.0)) {
 
 			// Split word by word
 			var words = text.split(' ');
@@ -133,8 +170,8 @@ window.Meme = function(image, canvas, top, bottom) {
 				while (i --) {
 					var justThis = words.slice(0, i).join(' ');
 					if (context.measureText(justThis).width < (canvas.width * 1.0)) {
-						drawText(justThis, topOrBottom, y);
-						drawText(words.slice(i, wordsLength).join(' '), topOrBottom, y + fontSize);
+						drawText(justThis, topOrBottom, y, fontSize);
+						drawText(words.slice(i, wordsLength).join(' '), topOrBottom, y + fontSize, fontSize);
 						return;
 					}
 				}
@@ -143,8 +180,8 @@ window.Meme = function(image, canvas, top, bottom) {
 				for (var i = 0; i < wordsLength; i ++) {
 					var justThis = words.slice(i, wordsLength).join(' ');
 					if (context.measureText(justThis).width < (canvas.width * 1.0)) {
-						drawText(justThis, topOrBottom, y);
-						drawText(words.slice(0, i).join(' '), topOrBottom, y - fontSize);
+						drawText(justThis, topOrBottom, y, fontSize);
+						drawText(words.slice(0, i).join(' '), topOrBottom, y - fontSize, fontSize);
 						return;
 					}
 				}
@@ -174,13 +211,11 @@ window.Meme = function(image, canvas, top, bottom) {
 		context.fillStyle = 'white';
 		context.strokeStyle = 'black';
 		context.lineWidth = 2;
-		var fontSize = (canvas.height / 8);
-		context.font = fontSize + 'px Impact';
 		context.textAlign = 'center';
 
 		// Draw them!
-		drawText(top, 'top');
-		drawText(bottom, 'bottom');
+		drawText(top, 'top', undefined, determineCaptionFontSize(top));
+		drawText(bottom, 'bottom', undefined, determineCaptionFontSize(bottom));
 
 	};
 
