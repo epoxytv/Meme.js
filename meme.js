@@ -55,7 +55,7 @@ var Meme = ( function (window, undefined) {
       else {
         size = this.captionLengthToFontSize[length];
       }
-      return size;
+      return (this.width/540) * size;
     },
 
     /*
