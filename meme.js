@@ -2,7 +2,7 @@ var Meme = ( function (window, undefined) {
 
   function Meme (image, canvas, ready) {
     this.canvas = this.get_canvas(canvas);
-    this.context = canvas.getContext('2d');
+    this.context = this.canvas.getContext('2d');
     this.image = this.get_image(image);
 
     var that = this;
@@ -85,8 +85,8 @@ var Meme = ( function (window, undefined) {
           while (i --) {
             var justThis = words.slice(0, i).join(' ');
             if (this.context.measureText(justThis).width < (this.canvas.width * 1.0)) {
-              drawText(justThis, topOrBottom, y, fontSize);
-              drawText(words.slice(i, wordsLength).join(' '), topOrBottom, y + fontSize, fontSize);
+              this.drawText(justThis, topOrBottom, y, fontSize);
+              this.drawText(words.slice(i, wordsLength).join(' '), topOrBottom, y + fontSize, fontSize);
               return;
             }
           }
@@ -95,8 +95,8 @@ var Meme = ( function (window, undefined) {
           for (var i = 0; i < wordsLength; i ++) {
             var justThis = words.slice(i, wordsLength).join(' ');
             if (this.context.measureText(justThis).width < (this.canvas.width * 1.0)) {
-              drawText(justThis, topOrBottom, y, fontSize);
-              drawText(words.slice(0, i).join(' '), topOrBottom, y - fontSize, fontSize);
+              this.drawText(justThis, topOrBottom, y, fontSize);
+              this.drawText(words.slice(0, i).join(' '), topOrBottom, y - fontSize, fontSize);
               return;
             }
           }
