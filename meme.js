@@ -1,12 +1,14 @@
 var Meme = ( function (window, undefined) {
 
-  function Meme (image, canvas, ready) {
-    this.canvas = this.get_canvas(canvas);
+  function Meme (options) {
+  	this.options = options;
+
+    this.canvas = this.get_canvas(this.options.canvas);
     this.context = this.canvas.getContext('2d');
-    this.image = this.get_image(image);
+    this.image = this.get_image(this.options.image);
 
     var that = this;
-    this.image.onload = this.setup_canvas.bind(this, ready);
+    this.image.onload = this.setup_canvas.bind(this, this.options.ready);
   }
 
   Meme.prototype = {
@@ -58,6 +60,11 @@ var Meme = ( function (window, undefined) {
 
     drawText : function(text, topOrBottom, y, fontSize) {
 
+      // Set up text variables
+      this.context.fillStyle = 'white';
+      this.context.strokeStyle = 'black';
+      this.context.lineWidth = 2;
+      this.context.textAlign = 'center';
       // Variable setup
       topOrBottom = topOrBottom || 'top';
       var x = this.canvas.width / 2;
@@ -112,22 +119,33 @@ var Meme = ( function (window, undefined) {
 
     setup_canvas : function (ready) {
       // Set dimensions
-      this.setCanvasDimensions(this.image.width, this.image.height);
+      this.change_crop(this.options.crop);
 
       this.draw_image();
-
-      // Set up text variables
-      this.context.fillStyle = 'white';
-      this.context.strokeStyle = 'black';
-      this.context.lineWidth = 2;
-      this.context.textAlign = 'center';
 
       ready();
     },
 
+    change_crop : function (crop) {
+    	this['crop_'+crop]();
+    	this.setCanvasDimensions(this.width, this.height);
+    },
+
+    crop_square_letterbox: function () {
+    	var side = this.image.width > this.image.height ? this.image.width : this.image.height;
+    	this.width = this.height = side;
+    },
+
+    crop_square : function () {
+    	var side = this.image.width > this.image.height ? this.image.height : this.image.width;
+    	this.width = this.height = side;
+    },
+
     draw_image : function () {
-    	// Draw the image
-      this.context.drawImage(this.image, 0, 0);
+    	this.context.fillStyle = 'black';
+    	this.context.fillRect(0,0,this.width,this.height);
+    	// Draw the imaged
+      this.context.drawImage(this.image, (this.width-this.image.width)/2, (this.height-this.image.height)/2);
     },
 
     draw : function (top, bottom) {
