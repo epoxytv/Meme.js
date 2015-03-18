@@ -1,11 +1,11 @@
 var Meme = ( function (window, undefined) {
 
   function Meme (options) {
-  	this.options = options;
+    this.options = options;
 
-  	this.top = this.options.top || '';
-  	this.bottom = this.options.bottom || '';
-  	this.options.crop = this.options.crop || 'original';
+    this.top = this.options.top || '';
+    this.bottom = this.options.bottom || '';
+    this.options.crop = this.options.crop || 'original';
 
     this.canvas = this.get_canvas(this.options.canvas);
     this.context = this.canvas.getContext('2d');
@@ -133,48 +133,48 @@ var Meme = ( function (window, undefined) {
     },
 
     set_crop : function (crop) {
-    	this['crop_'+crop]();
-    	this.setCanvasDimensions(this.width, this.height);
+      this['crop_'+crop]();
+      this.setCanvasDimensions(this.width, this.height);
     },
 
     update_crop : function (crop) {
-    	this.set_crop(crop);
-    	this.draw();
+      this.set_crop(crop);
+      this.draw();
     },
 
     crop_original : function () {
-    	this.width = this.image.width;
-    	this.height = this.image.height;
+      this.width = this.image.width;
+      this.height = this.image.height;
     },
 
     crop_square_letterbox: function () {
-    	var side = this.image.width > this.image.height ? this.image.width : this.image.height;
-    	this.width = this.height = side;
+      var side = this.image.width > this.image.height ? this.image.width : this.image.height;
+      this.width = this.height = side;
     },
 
     crop_square : function () {
-    	var side = this.image.width > this.image.height ? this.image.height : this.image.width;
-    	this.width = this.height = side;
+      var side = this.image.width > this.image.height ? this.image.height : this.image.width;
+      this.width = this.height = side;
     },
 
     draw_image : function () {
-    	this.context.fillStyle = 'black';
-    	this.context.fillRect(0,0,this.width,this.height);
-    	// Draw the imaged
+      this.context.fillStyle = 'black';
+      this.context.fillRect(0,0,this.width,this.height);
+      // Draw the imaged
       this.context.drawImage(this.image, (this.width-this.image.width)/2, (this.height-this.image.height)/2);
     },
 
     update : function (options) {
-    	for (var option in options) {
-			  if( options.hasOwnProperty( option ) ) {
-			  	this[option] = options[option];
-			  }
-			}
-    	this.draw();
+      for (var option in options) {
+        if( options.hasOwnProperty( option ) ) {
+          this[option] = options[option];
+        }
+      }
+      this.draw();
     },
 
     draw : function (top, bottom) {
-    	this.draw_image();
+      this.draw_image();
       // Draw them!
       this.drawText(this.top, 'top', undefined, this.determineCaptionFontSize(this.top));
       this.drawText(this.bottom, 'bottom', undefined, this.determineCaptionFontSize(this.bottom));
