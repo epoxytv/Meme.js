@@ -92,7 +92,7 @@ var Meme = ( function (window, undefined) {
         var words = text.split(' ');
         var wordsLength = words.length;
 
-        if (words.length = 1) { alert('Use your words!'); return; }
+        if (words.length == 1) { alert('Use your words!'); return; }
 
         // Start with the entire string, removing one word at a time. If
         // that removal lets us make a line, place the line and recurse with
