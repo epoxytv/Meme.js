@@ -135,7 +135,7 @@ var Meme = ( function (window, undefined) {
 
       this.draw_image();
 
-      ready();
+      if (ready) { ready(); }
     },
 
     set_crop : function (crop) {
