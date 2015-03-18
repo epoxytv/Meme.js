@@ -34,6 +34,7 @@ var Meme = ( function (window, undefined) {
     setCanvasDimensions : function(w, h) {
       this.canvas.width = w;
       this.canvas.height = h;
+      $(this.canvas).trigger('resize');
     },
 
     // Cribbed from memedad
