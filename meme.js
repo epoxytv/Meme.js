@@ -40,22 +40,22 @@ var Meme = ( function (window, undefined) {
     determineCaptionFontSize : function (caption) {
       var length = caption.length;
       var size;
-      if (length > 10) {
-        size = Math.round(Math.max(((1 / (Math.pow(length, 0.14285714285714285714285714285714))) * 50 + 10), 14));
-      }
-      else if (length > 20) {
-        size = Math.round(Math.max(((1 / (Math.pow(length, 0.125))) * 40 + 13), 14));
+      if (length > 206) {
+        size = Math.round(Math.max(((1 / (Math.pow((length - 160), 0.125))) * 40 + 2), 14));
       }
       else if (length > 90) {
         size = Math.round(Math.max(((1 / (Math.pow((length - 80), 0.125))) * 40 + 5), 14));
       }
-      else if (length > 206) {
-        size = Math.round(Math.max(((1 / (Math.pow((length - 160), 0.125))) * 40 + 2), 14));
+      else if (length > 20) {
+        size = Math.round(Math.max(((1 / (Math.pow(length, 0.125))) * 40 + 13), 14));
+      }
+      else if (length > 10) {
+        size = Math.round(Math.max(((1 / (Math.pow(length, 0.14285714285714285714285714285714))) * 50 + 10), 14));
       }
       else {
         size = this.captionLengthToFontSize[length];
       }
-      return (this.width/540) * size;
+      return (this.width/540) * size * 1.3;
     },
 
     /*
@@ -63,22 +63,27 @@ var Meme = ( function (window, undefined) {
     */
 
     drawText : function(text, topOrBottom, y, fontSize) {
+      topOrBottom = topOrBottom || 'top';
 
       // Set up text variables
       this.context.fillStyle = 'white';
       this.context.strokeStyle = 'black';
       this.context.lineWidth = 2;
       this.context.textAlign = 'center';
+      this.context.textBaseline = topOrBottom == 'bottom' ? 'bottom' : 'top';
+      this.context.font = fontSize + 'px Impact';
+
       // Variable setup
-      topOrBottom = topOrBottom || 'top';
       var x = this.canvas.width / 2;
+      var fontPaddingRatio = 0.3;
       if (typeof y === 'undefined') {
-        y = fontSize * 1.5;
-        if (topOrBottom === 'bottom')
-          y = this.canvas.height - (fontSize/2);
+        y = topOrBottom == 'top' ?
+          fontSize * fontPaddingRatio
+          :
+          this.canvas.height - fontSize*fontPaddingRatio
+        ;
       }
 
-      this.context.font = fontSize + 'px Impact';
 
       // Should we split it into multiple lines?
       if (this.context.measureText(text).width > (this.canvas.width * 1.0)) {
